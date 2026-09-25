@@ -64,6 +64,10 @@ Instance `scenes/minimap.tscn` in the HUD, anchored to a corner (the demo puts i
 
 The SubViewport is kept square and as large as the minimap, however it is sized.
 
+The minimap's root is in the `minimap` group. A settings menu reaches it through the group, with neither addon
+knowing the other: the player controller's Video settings show a Rotate Minimap toggle while a node in that group
+exists, and hand it to the group as `rotate_with_target`.
+
 ## Demo
 
 `scenes/demo/demo.tscn`: a walker loops round a village (`demo_map.tscn`, which has a shadow-casting sun and a sky)

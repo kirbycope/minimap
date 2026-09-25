@@ -30,7 +30,7 @@ shader_parameter/border_width = 0.01
 [sub_resource type="CanvasItemMaterial" id="Additive"]
 blend_mode = 1
 
-[node name="Minimap" type="Control"]
+[node name="Minimap" type="Control" groups=["minimap"]]
 custom_minimum_size = Vector2(164, 164)
 layout_mode = 3
 anchors_preset = 0

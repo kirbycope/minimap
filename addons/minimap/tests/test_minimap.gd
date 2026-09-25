@@ -150,3 +150,9 @@ func test_the_live_world_is_drawn_unshaded_so_the_map_has_no_shadows() -> void:
 	assert_eq(get_viewport().debug_draw, Viewport.DEBUG_DRAW_DISABLED, "while the game's own view keeps its lighting")
 	minimap.unshaded = false
 	assert_eq(minimap.viewport.debug_draw, Viewport.DEBUG_DRAW_DISABLED, "and it can be drawn lit")
+
+
+func test_it_joins_the_minimap_group_so_a_settings_menu_can_reach_it() -> void:
+	assert_true(minimap.is_in_group(&"minimap"), "In the minimap group")
+	get_tree().call_group(&"minimap", &"set", &"rotate_with_target", true)
+	assert_true(minimap.rotate_with_target, "so a menu setting rotate_with_target on the group turns it")

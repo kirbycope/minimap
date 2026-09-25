@@ -26,6 +26,10 @@ extends Control
 ##
 ## North is up unless [member rotate_with_target], which turns the map so the target always faces up and walks the
 ## north marker round the ring instead.
+##
+## The scene's root is in the [code]minimap[/code] group, which is how a settings menu reaches it without either addon
+## knowing the other: the player controller's Video settings hand their Rotate Minimap toggle to the group as
+## [member rotate_with_target].
 
 ## Who is at the centre: the Player, usually.
 @export var target: Node3D
