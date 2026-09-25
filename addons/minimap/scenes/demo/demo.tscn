@@ -49,7 +49,7 @@ offset_bottom = -16.0
 grow_horizontal = 0
 grow_vertical = 0
 target = NodePath("../../Walker")
-map_scene = ExtResource("2_map")
+map_path = "res://addons/minimap/scenes/demo/demo_map.tscn"
 
 [node name="Help" type="Label" parent="HUD"]
 offset_left = 16.0

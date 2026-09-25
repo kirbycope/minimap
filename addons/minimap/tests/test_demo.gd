@@ -23,5 +23,5 @@ func test_the_demo_is_wired() -> void:
 	var minimap: Minimap = demo.get("minimap")
 	assert_not_null(minimap, "the minimap is assigned")
 	assert_eq(minimap.target, demo.get("walker"), "and follows the walker")
-	assert_not_null(minimap.map_scene, "drawing the stripped copy of the village")
+	assert_false(minimap.map_path.is_empty(), "drawing the stripped copy of the village")
 	assert_not_null(demo.get("help"))

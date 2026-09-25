@@ -7,13 +7,15 @@ extends Control
 ## centre that turns the way it faces.
 ##
 ## Mario Kart draws its minimap from a model of the course of its own, not from the world the race is in, and Mario
-## Kart World renders that live from above with no karts in it. Set [member map_scene] and this does the same: the
+## Kart World renders that live from above with no karts in it. Set [member map_path] and this does the same: the
 ## scene is loaded into the SubViewport's own [World3D] and stripped to what a map needs ([method strip]): every shadow
-## off, its lights, cameras, environments, sounds and particles taken out, and every script that is not a
-## [code]@tool[/code] dropped, so none of the level's gameplay runs a second time; the minimap's own flat, shadowless
-## [member sun] lights it instead. Give it the level's art scene (terrain, buildings), placed by
-## [member map_transform] where the game places it. Left empty, the view is of the game's own world, as the
-## Breath of the Wild HUD this came from drew it, shadows, players and all.
+## off; its lights, cameras, environments, sounds, particles, HUDs and networking taken out, with anything in
+## [member hide_groups] (the players, the NPCs); rigid bodies frozen; and every script dropped but those of the
+## classes in [member keep_scripts] (a terrain that draws itself by script), so none of the level's gameplay runs a
+## second time. The minimap's own flat, shadowless [member sun] lights it instead. It may be the very scene the game is
+## playing, which is why it is a path: a scene cannot hold a reference to itself. [member map_transform] places it
+## where the game places it. Left empty, the view is of the game's own world, as the Breath of the Wild HUD this came
+## from drew it, shadows, players and all. The map is not loaded in the editor.
 ##
 ## North is up unless [member rotate_with_target], which turns the map so the target always faces up and walks the
 ## north marker round the ring instead.
@@ -24,13 +26,19 @@ extends Control
 @export var facing: Node3D
 ## The facing node looks along +Z rather than Godot's -Z, as a Mixamo model does.
 @export var facing_plus_z: bool = false
-## The map to draw, loaded into a world of its own and stripped of shadows; empty draws the game's own world.
-@export var map_scene: PackedScene = null:
+## The scene to draw the map from, loaded into a world of its own and stripped; empty draws the game's own world.
+@export_file("*.tscn", "*.scn") var map_path: String = "":
 	set(value):
-		map_scene = value
+		map_path = value
 		if is_node_ready():
 			load_map()
-## Where [member map_scene] goes in its world: where the game places that level, so the two line up.
+## Nodes in these groups are left out of the map: whatever moves about in the game (players, NPCs) would only stand
+## frozen where the scene put it.
+@export var hide_groups: PackedStringArray = PackedStringArray()
+## The global classes whose scripts stay on in the map, because they are what draw it (a script terrain: "HTerrain").
+## Every other script is dropped.
+@export var keep_scripts: PackedStringArray = PackedStringArray()
+## Where [member map_path] goes in its world: where the game places that level, so the two line up.
 @export var map_transform: Transform3D = Transform3D.IDENTITY:
 	set(value):
 		map_transform = value
@@ -78,45 +86,75 @@ func _ready() -> void:
 	load_map()
 
 
-## (Re)loads [member map_scene] into the minimap's own world, stripped; without one, the view is of the game's world.
+## (Re)loads [member map_path] into the minimap's own world, stripped; without one, the view is of the game's world.
 func load_map() -> void:
 	if _level != null and is_instance_valid(_level):
 		_level.queue_free()
 	_level = null
-	viewport.world_3d = _map_world if map_scene != null else null
-	sun.visible = map_scene != null
-	if map_scene == null:
+	var scene: PackedScene = null
+	if not map_path.is_empty() and not Engine.is_editor_hint():
+		scene = load(map_path) as PackedScene
+	viewport.world_3d = _map_world if scene != null else null
+	sun.visible = scene != null
+	if scene == null:
 		return
-	_level = map_scene.instantiate()
-	strip(_level)
+	_level = scene.instantiate()
+	strip(_level, hide_groups, keep_scripts)
 	if _level is Node3D:
 		(_level as Node3D).transform = map_transform
 	map_root.add_child(_level)
 
 
-## Strips [param root] to what a map needs, before it enters a tree: every shadow off; lights, cameras,
-## environments, sounds and particles removed; and every script that is not a [code]@tool[/code] dropped, so the
-## level's gameplay (spawners, saves, AI) never runs in the map. A tool script stays, since tool scripts are what
-## draw things like terrain and are written to run anywhere. Returns how many nodes it removed.
-static func strip(root: Node) -> int:
+## Strips [param root] to what a map needs, before it enters a tree. Every shadow goes off. Removed: lights,
+## cameras, environments, sounds, particles, anything 2D or on a canvas layer (a HUD), multiplayer spawners and
+## synchronizers, other viewports, and every node in [param hidden_groups]. Rigid bodies are frozen. Every script is
+## dropped, so the level's gameplay (spawners, saves, AI, weather) never runs in the map, except those whose global
+## class, or a class it extends, is in [param keep_classes]. Returns how many nodes it removed.
+static func strip(root: Node, hidden_groups: PackedStringArray = PackedStringArray(), keep_classes: PackedStringArray = PackedStringArray()) -> int:
 	var removed: int = 0
 	var nodes: Array[Node] = [root]
 	nodes.append_array(root.find_children("*", "", true, false))
 	for node: Node in nodes:
 		if not is_instance_valid(node):
 			continue
-		if node != root and (node is Light3D or node is Camera3D or node is WorldEnvironment or node is AudioStreamPlayer
-				or node is AudioStreamPlayer3D or node is GPUParticles3D or node is CPUParticles3D):
+		if node != root and (_not_for_a_map(node) or _in_any(node, hidden_groups)):
 			node.get_parent().remove_child(node)
 			node.free()
 			removed += 1
 			continue
 		var script: Script = node.get_script() as Script
-		if script != null and not script.is_tool():
+		if script != null and not _kept(script, keep_classes):
 			node.set_script(null)
 		if node is GeometryInstance3D:
 			(node as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if node is RigidBody3D:
+			(node as RigidBody3D).freeze = true
 	return removed
+
+
+## True when [param node] is in one of [param groups].
+static func _in_any(node: Node, groups: PackedStringArray) -> bool:
+	for group: String in groups:
+		if node.is_in_group(group):
+			return true
+	return false
+
+
+## True for a node a map has no use for.
+static func _not_for_a_map(node: Node) -> bool:
+	return node is Light3D or node is Camera3D or node is WorldEnvironment or node is AudioStreamPlayer \
+			or node is AudioStreamPlayer3D or node is GPUParticles3D or node is CPUParticles3D or node is CanvasItem \
+			or node is CanvasLayer or node is MultiplayerSpawner or node is MultiplayerSynchronizer or node is Viewport
+
+
+## True when [param script], or a script it extends, declares one of [param classes] as its global class.
+static func _kept(script: Script, classes: PackedStringArray) -> bool:
+	var at: Script = script
+	while at != null:
+		if String(at.get_global_name()) in classes:
+			return true
+		at = at.get_base_script()
+	return false
 
 
 func _fit_viewport() -> void:

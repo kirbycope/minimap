@@ -10,11 +10,11 @@ extends Node3D
 @export_range(0.1, 20.0, 0.1, "suffix:m/s") var walk_speed: float = 3.0
 
 var _angle: float = 0.0
-var _map_scene: PackedScene = null
+var _map_path: String = ""
 
 
 func _ready() -> void:
-	_map_scene = minimap.map_scene
+	_map_path = minimap.map_path
 	_describe()
 
 
@@ -30,7 +30,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_M:
 			minimap.rotate_with_target = not minimap.rotate_with_target
 		elif event.keycode == KEY_L:
-			minimap.map_scene = null if minimap.map_scene != null else _map_scene
+			minimap.map_path = "" if not minimap.map_path.is_empty() else _map_path
 		else:
 			return
 		_describe()
@@ -39,5 +39,5 @@ func _unhandled_input(event: InputEvent) -> void:
 func _describe() -> void:
 	help.text = "M: %s    L: %s" % [
 		"map turns with the walker" if minimap.rotate_with_target else "north up",
-		"stripped map scene, no shadows" if minimap.map_scene != null else "the game's own world, shadows and all",
+		"stripped map scene, no shadows" if not minimap.map_path.is_empty() else "the game's own world, shadows and all",
 	]

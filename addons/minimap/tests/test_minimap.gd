@@ -4,7 +4,7 @@ extends GutTest
 ## the arrow points the way the target faces; and the picture is as large as the minimap.
 
 const MINIMAP_SCENE: PackedScene = preload("res://addons/minimap/scenes/minimap.tscn")
-const MAP_SCENE: PackedScene = preload("res://addons/minimap/scenes/demo/demo_map.tscn")
+const MAP_PATH: String = "res://addons/minimap/scenes/demo/demo_map.tscn"
 
 var minimap: Minimap
 var walker: Node3D
@@ -18,58 +18,76 @@ func before_each() -> void:
 	add_child_autofree(minimap)
 
 
-## A level the way a game has one: lit, shadowed, with a camera, a sky, sound, particles and a script running it.
+## A level the way a game has one: lit, shadowed, with a camera, a sky, sound, particles, a HUD, a spawner, a player,
+## a ball, a script running it and a terrain drawn by script.
 func _level() -> Node3D:
 	var level := Node3D.new()
 	var mesh := MeshInstance3D.new()
 	mesh.name = "House"
 	mesh.mesh = BoxMesh.new()
 	level.add_child(mesh)
-	for extra: Node in [DirectionalLight3D.new(), OmniLight3D.new(), Camera3D.new(), WorldEnvironment.new(), AudioStreamPlayer3D.new(), GPUParticles3D.new()]:
+	for extra: Node in [DirectionalLight3D.new(), OmniLight3D.new(), Camera3D.new(), WorldEnvironment.new(), AudioStreamPlayer3D.new(), GPUParticles3D.new(), CanvasLayer.new(), MultiplayerSpawner.new()]:
 		level.add_child(extra)
+	var hud := Control.new()
+	hud.add_child(Label.new())
+	level.add_child(hud)
+	var player := Node3D.new()
+	player.add_to_group(&"Player")
+	player.add_child(MeshInstance3D.new())
+	level.add_child(player)
+	var ball := RigidBody3D.new()
+	ball.name = "Ball"
+	level.add_child(ball)
 	var gameplay := Node.new()
 	gameplay.name = "Spawner"
-	var plain := GDScript.new()
-	plain.source_code = "extends Node\n"
-	plain.reload()
-	gameplay.set_script(plain)
+	gameplay.set_script(_script("extends Node\n"))
 	level.add_child(gameplay)
+	var weather := Node.new()
+	weather.name = "Weather"
+	weather.set_script(_script("@tool\nextends Node\n"))
+	level.add_child(weather)
 	var terrain := Node3D.new()
 	terrain.name = "Terrain"
-	var tool := GDScript.new()
-	tool.source_code = "@tool\nextends Node3D\n"
-	tool.reload()
-	terrain.set_script(tool)
+	terrain.set_script(_script("class_name MinimapTestTerrain\nextends Node3D\n"))
 	level.add_child(terrain)
 	return level
 
 
+func _script(source: String) -> GDScript:
+	var script := GDScript.new()
+	script.source_code = source
+	script.reload()
+	return script
+
+
 func test_stripping_leaves_a_shadowless_map_with_no_gameplay() -> void:
 	var level: Node3D = autofree(_level())
-	assert_eq(Minimap.strip(level), 6, "The lights, the camera, the sky, the sound and the particles go")
-	assert_eq(level.get_child_count(), 3, "leaving the house, the spawner and the terrain")
+	assert_eq(Minimap.strip(level, PackedStringArray(["Player"]), PackedStringArray(["MinimapTestTerrain"])), 10, "The lights, the camera, the sky, the sound, the particles, the HUDs, the spawner and the player go")
+	assert_eq(level.get_child_count(), 5, "leaving the house, the ball, the spawner, the weather and the terrain")
 	assert_eq((level.get_node("House") as MeshInstance3D).cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "The house casts no shadow")
+	assert_true((level.get_node("Ball") as RigidBody3D).freeze, "The ball is frozen where it lies")
 	assert_null(level.get_node("Spawner").get_script(), "A gameplay script is dropped, so it never runs a second time")
-	assert_not_null(level.get_node("Terrain").get_script(), "A tool script stays: tool scripts draw terrain and run anywhere")
+	assert_null(level.get_node("Weather").get_script(), "a tool script too, which would run its weather again")
+	assert_not_null(level.get_node("Terrain").get_script(), "but a class named to keep stays: a terrain that draws itself")
 
 
 func test_a_map_scene_loads_into_a_world_of_its_own_and_none_draws_the_game_world() -> void:
 	assert_eq(minimap.viewport.find_world_3d(), get_viewport().find_world_3d(), "No map scene: the game's own world")
 	assert_false(minimap.sun.visible, "lit by its own light, not the minimap's")
-	minimap.map_scene = MAP_SCENE
+	minimap.map_path = MAP_PATH
 	assert_ne(minimap.viewport.find_world_3d(), get_viewport().find_world_3d(), "A map scene is drawn in a world of its own")
 	assert_true(minimap.sun.visible, "under the minimap's flat light")
 	var level: Node = minimap.map_root.get_child(minimap.map_root.get_child_count() - 1)
 	assert_eq(level.find_children("*", "DirectionalLight3D", true, false).size(), 0, "without the level's own sun")
 	for mesh: Node in level.find_children("*", "GeometryInstance3D", true, false):
 		assert_eq((mesh as GeometryInstance3D).cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "%s casts no shadow" % mesh.name)
-	minimap.map_scene = null
+	minimap.map_path = ""
 	assert_eq(minimap.viewport.find_world_3d(), get_viewport().find_world_3d(), "and cleared, it is back to the game's world")
 
 
 func test_the_map_scene_goes_where_the_game_puts_it() -> void:
 	minimap.map_transform = Transform3D(Basis(), Vector3(-176.0, -23.7, -280.0))
-	minimap.map_scene = MAP_SCENE
+	minimap.map_path = MAP_PATH
 	var level: Node3D = minimap.map_root.get_child(minimap.map_root.get_child_count() - 1)
 	assert_eq(level.position, Vector3(-176.0, -23.7, -280.0))
 
