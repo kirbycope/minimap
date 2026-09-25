@@ -1,0 +1,304 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="Grass"]
+albedo_color = Color(0.36, 0.55, 0.27, 1)
+
+[sub_resource type="StandardMaterial3D" id="Road"]
+albedo_color = Color(0.62, 0.56, 0.44, 1)
+
+[sub_resource type="StandardMaterial3D" id="Wall"]
+albedo_color = Color(0.9, 0.86, 0.78, 1)
+
+[sub_resource type="StandardMaterial3D" id="Roof"]
+albedo_color = Color(0.62, 0.22, 0.18, 1)
+
+[sub_resource type="StandardMaterial3D" id="Water"]
+albedo_color = Color(0.2, 0.45, 0.75, 1)
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Leaves"]
+albedo_color = Color(0.18, 0.4, 0.16, 1)
+
+[sub_resource type="StandardMaterial3D" id="Bark"]
+albedo_color = Color(0.36, 0.24, 0.14, 1)
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMaterial")
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 2
+sky = SubResource("Sky")
+tonemap_mode = 2
+
+[node name="DemoMap" type="Node3D"]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+editor_description = "Casts long shadows across the village, which the minimap strips along with the light itself."
+transform = Transform3D(0.8660254, -0.3830222, 0.3213938, 0, 0.6427876, 0.7660444, -0.5, -0.6634139, 0.5566704, 0, 20, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Ground" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+use_collision = true
+size = Vector3(120, 1, 120)
+material = SubResource("Grass")
+
+[node name="RoadNorthSouth" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+size = Vector3(4, 0.02, 120)
+material = SubResource("Road")
+
+[node name="RoadEastWest" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+size = Vector3(120, 0.02, 4)
+material = SubResource("Road")
+
+[node name="Pond" type="CSGCylinder3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.02, 18)
+radius = 7.0
+height = 0.04
+sides = 32
+material = SubResource("Water")
+
+[node name="House1" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -8)
+
+[node name="Walls" type="CSGBox3D" parent="House1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+use_collision = true
+size = Vector3(6, 3, 5)
+material = SubResource("Wall")
+
+[node name="Roof" type="CSGBox3D" parent="House1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 0)
+size = Vector3(6.6, 0.8, 5.6)
+material = SubResource("Roof")
+
+[node name="House2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -9)
+
+[node name="Walls" type="CSGBox3D" parent="House2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+use_collision = true
+size = Vector3(6, 3, 5)
+material = SubResource("Wall")
+
+[node name="Roof" type="CSGBox3D" parent="House2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 0)
+size = Vector3(6.6, 0.8, 5.6)
+material = SubResource("Roof")
+
+[node name="House3" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, 8)
+
+[node name="Walls" type="CSGBox3D" parent="House3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+use_collision = true
+size = Vector3(6, 3, 5)
+material = SubResource("Wall")
+
+[node name="Roof" type="CSGBox3D" parent="House3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 0)
+size = Vector3(6.6, 0.8, 5.6)
+material = SubResource("Roof")
+
+[node name="House4" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, -6)
+
+[node name="Walls" type="CSGBox3D" parent="House4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+use_collision = true
+size = Vector3(6, 3, 5)
+material = SubResource("Wall")
+
+[node name="Roof" type="CSGBox3D" parent="House4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 0)
+size = Vector3(6.6, 0.8, 5.6)
+material = SubResource("Roof")
+
+[node name="House5" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 22)
+
+[node name="Walls" type="CSGBox3D" parent="House5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+use_collision = true
+size = Vector3(6, 3, 5)
+material = SubResource("Wall")
+
+[node name="Roof" type="CSGBox3D" parent="House5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 0)
+size = Vector3(6.6, 0.8, 5.6)
+material = SubResource("Roof")
+
+[node name="House6" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, 20)
+
+[node name="Walls" type="CSGBox3D" parent="House6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+use_collision = true
+size = Vector3(6, 3, 5)
+material = SubResource("Wall")
+
+[node name="Roof" type="CSGBox3D" parent="House6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 0)
+size = Vector3(6.6, 0.8, 5.6)
+material = SubResource("Roof")
+
+[node name="House7" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, -20)
+
+[node name="Walls" type="CSGBox3D" parent="House7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+use_collision = true
+size = Vector3(6, 3, 5)
+material = SubResource("Wall")
+
+[node name="Roof" type="CSGBox3D" parent="House7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.4, 0)
+size = Vector3(6.6, 0.8, 5.6)
+material = SubResource("Roof")
+
+[node name="Tree1" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 14)
+
+[node name="Trunk" type="CSGCylinder3D" parent="Tree1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+radius = 0.25
+height = 2.0
+material = SubResource("Bark")
+
+[node name="Crown" type="CSGSphere3D" parent="Tree1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+radius = 1.6
+material = SubResource("Leaves")
+
+[node name="Tree2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 13)
+
+[node name="Trunk" type="CSGCylinder3D" parent="Tree2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+radius = 0.25
+height = 2.0
+material = SubResource("Bark")
+
+[node name="Crown" type="CSGSphere3D" parent="Tree2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+radius = 1.6
+material = SubResource("Leaves")
+
+[node name="Tree3" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, -3)
+
+[node name="Trunk" type="CSGCylinder3D" parent="Tree3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+radius = 0.25
+height = 2.0
+material = SubResource("Bark")
+
+[node name="Crown" type="CSGSphere3D" parent="Tree3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+radius = 1.6
+material = SubResource("Leaves")
+
+[node name="Tree4" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 5)
+
+[node name="Trunk" type="CSGCylinder3D" parent="Tree4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+radius = 0.25
+height = 2.0
+material = SubResource("Bark")
+
+[node name="Crown" type="CSGSphere3D" parent="Tree4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+radius = 1.6
+material = SubResource("Leaves")
+
+[node name="Tree5" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, -15)
+
+[node name="Trunk" type="CSGCylinder3D" parent="Tree5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+radius = 0.25
+height = 2.0
+material = SubResource("Bark")
+
+[node name="Crown" type="CSGSphere3D" parent="Tree5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+radius = 1.6
+material = SubResource("Leaves")
+
+[node name="Tree6" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0, 3)
+
+[node name="Trunk" type="CSGCylinder3D" parent="Tree6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+radius = 0.25
+height = 2.0
+material = SubResource("Bark")
+
+[node name="Crown" type="CSGSphere3D" parent="Tree6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+radius = 1.6
+material = SubResource("Leaves")
+
+[node name="Tree7" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -16)
+
+[node name="Trunk" type="CSGCylinder3D" parent="Tree7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+radius = 0.25
+height = 2.0
+material = SubResource("Bark")
+
+[node name="Crown" type="CSGSphere3D" parent="Tree7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+radius = 1.6
+material = SubResource("Leaves")
+
+[node name="Tree8" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -24)
+
+[node name="Trunk" type="CSGCylinder3D" parent="Tree8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+radius = 0.25
+height = 2.0
+material = SubResource("Bark")
+
+[node name="Crown" type="CSGSphere3D" parent="Tree8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+radius = 1.6
+material = SubResource("Leaves")
+
+[node name="Tree9" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 0, 6)
+
+[node name="Trunk" type="CSGCylinder3D" parent="Tree9"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+radius = 0.25
+height = 2.0
+material = SubResource("Bark")
+
+[node name="Crown" type="CSGSphere3D" parent="Tree9"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+radius = 1.6
+material = SubResource("Leaves")
+
+[node name="Tree10" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 0, -2)
+
+[node name="Trunk" type="CSGCylinder3D" parent="Tree10"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+radius = 0.25
+height = 2.0
+material = SubResource("Bark")
+
+[node name="Crown" type="CSGSphere3D" parent="Tree10"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+radius = 1.6
+material = SubResource("Leaves")

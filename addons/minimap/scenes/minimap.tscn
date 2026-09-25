@@ -1,0 +1,140 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://addons/minimap/scripts/minimap.gd" id="1_minimap"]
+[ext_resource type="Shader" path="res://addons/minimap/assets/shaders/minimap.gdshader" id="2_lens"]
+[ext_resource type="Texture2D" path="res://addons/minimap/assets/icons/arrow.svg" id="3_arrow"]
+
+[sub_resource type="StyleBoxFlat" id="Round"]
+bg_color = Color(0.1, 0.1, 0.1, 0.6)
+corner_radius_top_left = 128
+corner_radius_top_right = 128
+corner_radius_bottom_right = 128
+corner_radius_bottom_left = 128
+corner_detail = 16
+
+[sub_resource type="Environment" id="MapLook"]
+background_mode = 1
+background_color = Color(0.16, 0.18, 0.2, 1)
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.55
+tonemap_mode = 2
+
+[sub_resource type="ShaderMaterial" id="Lens"]
+shader = ExtResource("2_lens")
+shader_parameter/radius = 0.5
+shader_parameter/softness = 0.02
+shader_parameter/border_color = Color(1, 1, 1, 0.8)
+shader_parameter/border_width = 0.01
+
+[sub_resource type="CanvasItemMaterial" id="Additive"]
+blend_mode = 1
+
+[node name="Minimap" type="Control"]
+custom_minimum_size = Vector2(164, 164)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 164.0
+offset_bottom = 164.0
+mouse_filter = 2
+script = ExtResource("1_minimap")
+
+[node name="Background" type="Panel" parent="."]
+editor_description = "The dark disc behind the lens, from the Breath of the Wild HUD."
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Round")
+
+[node name="SubViewport" type="SubViewport" parent="."]
+editor_description = "Where the map is rendered, square and as large as the minimap. Its own world while a map scene is set, the game's otherwise."
+transparent_bg = true
+size = Vector2i(164, 164)
+render_target_update_mode = 4
+
+[node name="Camera" type="Camera3D" parent="SubViewport"]
+editor_description = "Looks straight down over the target, orthographic, view_size metres across. The Minimap places it every frame."
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 100, 0)
+environment = SubResource("MapLook")
+projection = 1
+size = 40.0
+far = 1100.0
+
+[node name="Map" type="Node3D" parent="SubViewport"]
+editor_description = "The loaded map scene goes under here, stripped."
+
+[node name="Sun" type="DirectionalLight3D" parent="SubViewport/Map"]
+editor_description = "The map's own light: from high up and shadowless, so the map reads flat. Shown only while a map scene is loaded; the game's world has its own."
+transform = Transform3D(0.8660254, 0.35355338, -0.35355338, 0, 0.70710677, 0.70710677, 0.5, -0.61237246, 0.61237246, 0, 50, 0)
+visible = false
+light_energy = 0.9
+
+[node name="Display" type="TextureRect" parent="."]
+editor_description = "The rendered map through the round lens (assets/shaders/minimap.gdshader)."
+material = SubResource("Lens")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+
+[node name="North" type="Control" parent="."]
+editor_description = "The N on the ring, where north is. The Minimap moves it round the ring when the map turns with the target."
+layout_mode = 3
+anchors_preset = 0
+offset_left = 71.0
+offset_top = -11.0
+offset_right = 93.0
+offset_bottom = 11.0
+mouse_filter = 2
+
+[node name="Diamond" type="ColorRect" parent="North"]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 19.0
+offset_bottom = 19.0
+rotation = 0.7853982
+pivot_offset = Vector2(8, 8)
+mouse_filter = 2
+color = Color(0.1764706, 0.1764706, 0.1764706, 0.85)
+
+[node name="N" type="Label" parent="North"]
+material = SubResource("Additive")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 13
+text = "N"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Arrow" type="TextureRect" parent="."]
+editor_description = "The target, at the centre, pointing the way it faces (always up while the map turns with it)."
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -11.0
+offset_top = -11.0
+offset_right = 11.0
+offset_bottom = 11.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(11, 11)
+mouse_filter = 2
+texture = ExtResource("3_arrow")
+expand_mode = 1
+stretch_mode = 5
