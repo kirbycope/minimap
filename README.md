@@ -1,7 +1,7 @@
 # Minimap for Godot 4.8+
 
-A round HUD minimap, the Zelda and Mario Kart way: a live top-down view of a map scene loaded into a world of
-its own and stripped of shadows, with a north marker on the ring and the player an arrow at the centre.
+A round HUD minimap, the Zelda and Mario Kart way: a live top-down view of the game's world drawn without light or
+shadow, or of a map scene of its own, with a north marker on the ring and the player an arrow at the centre.
 
 **[Read the full documentation](addons/minimap/README.md)**, which ships with the addon so it is there however
 you installed it.
@@ -20,4 +20,4 @@ The tests need GUT, which is not committed: `python tools/pull_addons.py` fetche
 `tools/addons.json`, and CI runs the same pull before the tests and the web export.
 
 Clone it, run the pull, open `project.godot` in Godot, and press play. M turns the map with the walker or keeps
-north up; L swaps between the stripped map scene and the game's own world.
+north up; L swaps between the live world and a stripped copy of the village.

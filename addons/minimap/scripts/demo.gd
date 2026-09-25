@@ -1,7 +1,7 @@
 extends Node3D
-## The minimap demo: a walker loops round the village with the minimap in the corner. M turns the map with the
-## walker or keeps north up; L swaps the minimap between the stripped map scene and the game's own world, shadows
-## and all, to compare them.
+## The minimap demo: a walker loops round the village with the minimap in the corner, drawing the live world
+## unshaded. M turns the map with the walker or keeps north up; L swaps to a stripped copy of the village loaded into
+## the minimap's own world, Mario Kart style, and back.
 
 @export var minimap: Minimap ## The HUD's minimap.
 @export var walker: Node3D ## Who walks the loop, and whom the minimap follows.
@@ -10,11 +10,10 @@ extends Node3D
 @export_range(0.1, 20.0, 0.1, "suffix:m/s") var walk_speed: float = 3.0
 
 var _angle: float = 0.0
-var _map_path: String = ""
+const MAP_PATH: String = "res://addons/minimap/scenes/demo/demo_map.tscn"
 
 
 func _ready() -> void:
-	_map_path = minimap.map_path
 	_describe()
 
 
@@ -30,7 +29,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.keycode == KEY_M:
 			minimap.rotate_with_target = not minimap.rotate_with_target
 		elif event.keycode == KEY_L:
-			minimap.map_path = "" if not minimap.map_path.is_empty() else _map_path
+			minimap.map_path = "" if not minimap.map_path.is_empty() else MAP_PATH
 		else:
 			return
 		_describe()
@@ -39,5 +38,5 @@ func _unhandled_input(event: InputEvent) -> void:
 func _describe() -> void:
 	help.text = "M: %s    L: %s" % [
 		"map turns with the walker" if minimap.rotate_with_target else "north up",
-		"stripped map scene, no shadows" if not minimap.map_path.is_empty() else "the game's own world, shadows and all",
+		"a stripped copy of the village" if not minimap.map_path.is_empty() else "the live world, unshaded",
 	]

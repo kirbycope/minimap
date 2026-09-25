@@ -5,7 +5,15 @@ live, top-down, orthographic view in a `SubViewport` and shows it through a roun
 (`assets/shaders/minimap.gdshader`), a dark disc behind it, an N on the ring where north is, and the target an
 arrow at the centre pointing the way it faces. It came from the Breath of the Wild project's HUD.
 
-## Drawing a map scene, not the game
+## The live world, unshaded
+
+By default the Minimap draws the game's own world, live: everything that moves, is picked up, synchronised or changed by
+an RPC is on the map as it happens, with nothing to keep in step. `unshaded` (on) draws it with the SubViewport's
+Unshaded debug draw mode, without light or shadow, only the surfaces' own colours, which is what makes it read as a map,
+while the game's own view keeps its lighting. `cull_mask` leaves out render layers the map should not show (weather,
+say, if it is on a layer of its own).
+
+## Drawing a map scene instead
 
 Mario Kart has always drawn its minimap from a model of the course of its own, a simplified copy shown from above
 in a corner of the screen, and Mario Kart World renders it live in 3D from above with no karts in it. Set
@@ -34,8 +42,8 @@ flat background and bright ambient light, so the map reads flat and clean. Give 
 buildings, roads) rather than the whole game scene, and `map_transform` to place it where the game places that level,
 so the two line up.
 
-Leave `map_path` empty and the view is of the game's own world, as the Breath of the Wild HUD drew it, shadows,
-players and all; `cull_mask` leaves out layers that should not show.
+A copy does not move: a door opened, a chest emptied or a ball rolled in the game stays as it was on the map. For a
+world whose things change, draw it live, and keep a map scene for a map drawn from art of its own.
 
 ## Setting it up
 
@@ -45,7 +53,8 @@ Instance `scenes/minimap.tscn` in the HUD, anchored to a corner (the demo puts i
 |---|---|
 | `target` | Who is at the centre: the Player. |
 | `facing` / `facing_plus_z` | What the arrow turns with, when that is not the target: a Player whose body does not turn but whose model does. A Mixamo model looks along +Z, so tick `facing_plus_z`. |
-| `map_path` / `map_transform` | The scene to draw the map from (the level, or the game scene itself) and where the game puts it. Empty draws the game's world. |
+| `unshaded` | Draw without light or shadow (on). |
+| `map_path` / `map_transform` | A scene to draw the map from instead of the live world, and where the game puts it. Empty, the default, draws the live world. |
 | `hide_groups` | Groups left out of the map, such as `Player`. |
 | `keep_scripts` | Global classes whose scripts stay on in the map, such as `HTerrain`. |
 | `view_size` | Metres of ground across the map (40). |
@@ -58,8 +67,8 @@ The SubViewport is kept square and as large as the minimap, however it is sized.
 ## Demo
 
 `scenes/demo/demo.tscn`: a walker loops round a village (`demo_map.tscn`, which has a shadow-casting sun and a sky)
-with the minimap in the corner drawing a stripped copy of the same village. M turns the map with the walker or keeps
-north up; L swaps between the stripped map scene and the game's own world, shadows and all.
+with the minimap in the corner drawing it live and unshaded. M turns the map with the walker or keeps north up; L swaps
+to a stripped copy of the village in the minimap's own world, and back.
 
 ## Tests
 

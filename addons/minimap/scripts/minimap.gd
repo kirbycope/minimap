@@ -6,6 +6,11 @@ extends Control
 ## [SubViewport], masked to a circle with a ring, north marked on the ring, and the [member target] an arrow at the
 ## centre that turns the way it faces.
 ##
+## By default it draws the game's own world, live, so everything in it that moves, is picked up, synchronised or changed
+## by an RPC shows on the map as it happens, and draws it [member unshaded]: no light and no shadow at all, only the
+## surfaces' own colours, which is what makes a map read as a map. That is the SubViewport's own debug draw mode, so the
+## game's view keeps its lighting. [member cull_mask] leaves out the render layers the map should not show.
+##
 ## Mario Kart draws its minimap from a model of the course of its own, not from the world the race is in, and Mario
 ## Kart World renders that live from above with no karts in it. Set [member map_path] and this does the same: the
 ## scene is loaded into a [World3D] of its own, which the SubViewport draws, and stripped to what a map needs ([method strip]): every shadow
@@ -15,7 +20,8 @@ extends Control
 ## second time. The minimap's own flat, shadowless [member sun] lights it instead. It may be the very scene the game is
 ## playing, which is why it is a path: a scene cannot hold a reference to itself. [member map_transform] places it
 ## where the game places it. Left empty, the view is of the game's own world, as the Breath of the Wild HUD this came
-## from drew it, shadows, players and all. The map is not loaded in the editor. The copy lives outside the game's scene,
+## from drew it. A copy does not move, so a map of a world whose things change is better drawn live. The map is not
+## loaded in the editor. The copy lives outside the game's scene,
 ## under the root window ([method get_level]), so nothing that searches the game ever finds it.
 ##
 ## North is up unless [member rotate_with_target], which turns the map so the target always faces up and walks the
@@ -55,6 +61,12 @@ extends Control
 @export_range(5.0, 2000.0, 1.0, "suffix:m") var height: float = 100.0
 ## Turn the map so the target always faces up, rather than keeping north up.
 @export var rotate_with_target: bool = false
+## Draw without light or shadow, only the surfaces' own colours, as a map is. Off draws the world lit as the game is.
+@export var unshaded: bool = true:
+	set(value):
+		unshaded = value
+		if is_node_ready():
+			viewport.debug_draw = Viewport.DEBUG_DRAW_UNSHADED if value else Viewport.DEBUG_DRAW_DISABLED
 ## Layers the camera draws. In the game's own world, leave out the layers of anything the map should not show.
 @export_flags_3d_render var cull_mask: int = 0xFFFFF:
 	set(value):
@@ -101,6 +113,7 @@ func get_level() -> Node:
 
 func _ready() -> void:
 	display.texture = viewport.get_texture()
+	viewport.debug_draw = Viewport.DEBUG_DRAW_UNSHADED if unshaded else Viewport.DEBUG_DRAW_DISABLED
 	camera.size = view_size
 	camera.cull_mask = cull_mask
 	resized.connect(_fit_viewport)

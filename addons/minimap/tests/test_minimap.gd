@@ -142,3 +142,11 @@ func test_the_picture_is_as_large_as_the_minimap() -> void:
 	minimap.size = Vector2(240.0, 240.0)
 	await wait_process_frames(1)
 	assert_eq(minimap.viewport.size, Vector2i(240, 240))
+
+
+func test_the_live_world_is_drawn_unshaded_so_the_map_has_no_shadows() -> void:
+	assert_eq(minimap.viewport.find_world_3d(), get_viewport().find_world_3d(), "By default the map is the game's own world, live")
+	assert_eq(minimap.viewport.debug_draw, Viewport.DEBUG_DRAW_UNSHADED, "drawn without light or shadow")
+	assert_eq(get_viewport().debug_draw, Viewport.DEBUG_DRAW_DISABLED, "while the game's own view keeps its lighting")
+	minimap.unshaded = false
+	assert_eq(minimap.viewport.debug_draw, Viewport.DEBUG_DRAW_DISABLED, "and it can be drawn lit")

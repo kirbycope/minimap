@@ -49,7 +49,6 @@ offset_bottom = -16.0
 grow_horizontal = 0
 grow_vertical = 0
 target = NodePath("../../Walker")
-map_path = "res://addons/minimap/scenes/demo/demo_map.tscn"
 
 [node name="Help" type="Label" parent="HUD"]
 offset_left = 16.0
@@ -58,4 +57,4 @@ offset_right = 616.0
 offset_bottom = 44.0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 6
-text = "M: north up    L: stripped map scene, no shadows"
+text = "M: north up    L: the live world, unshaded"
