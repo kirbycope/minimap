@@ -16,10 +16,15 @@ what a map needs by `Minimap.strip()`:
 - lights, cameras, `WorldEnvironment`s, sound players, particles, anything 2D or on a `CanvasLayer` (the game's HUD),
   multiplayer spawners and synchronizers and other viewports are removed, and so is every node in `hide_groups`
   (whatever moves about in the game, which would only stand frozen where the scene put it: `Player`, NPCs);
-- rigid bodies are frozen;
+- rigid bodies are frozen, and every node leaves its groups, so the game's group lookups (its checkpoints, its water)
+  never land on the map's copy instead of the real thing;
 - every script is dropped, so none of the level's gameplay (spawners, saves, AI, weather) runs a second time,
   except the scripts of the global classes named in `keep_scripts`, for a terrain that draws itself by script
   (`HTerrain`).
+
+The copy lives outside the game's scene, in a `SubViewport` of its own under the root window that shares the
+minimap's world but draws nothing (`Minimap.get_level()` returns it), so no search of the game, `find_child` by name
+included, ever finds it. That viewport's camera follows the minimap's, for a terrain that picks its detail from it.
 
 It may be the very scene the game is playing, which is why it is a path and not a `PackedScene`: a scene cannot hold
 a reference to itself. The map is not loaded in the editor.

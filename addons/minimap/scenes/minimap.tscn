@@ -65,7 +65,7 @@ size = 40.0
 far = 1100.0
 
 [node name="Map" type="Node3D" parent="SubViewport"]
-editor_description = "The loaded map scene goes under here, stripped."
+editor_description = "The minimap's own light for the map's world. The stripped copy of the map scene itself lives outside the game's scene, in a SubViewport under the root window sharing this world, so nothing searching the game finds it."
 
 [node name="Sun" type="DirectionalLight3D" parent="SubViewport/Map"]
 editor_description = "The map's own light: from high up and shadowless, so the map reads flat. Shown only while a map scene is loaded; the game's world has its own."

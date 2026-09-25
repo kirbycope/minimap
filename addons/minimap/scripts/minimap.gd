@@ -8,14 +8,15 @@ extends Control
 ##
 ## Mario Kart draws its minimap from a model of the course of its own, not from the world the race is in, and Mario
 ## Kart World renders that live from above with no karts in it. Set [member map_path] and this does the same: the
-## scene is loaded into the SubViewport's own [World3D] and stripped to what a map needs ([method strip]): every shadow
+## scene is loaded into a [World3D] of its own, which the SubViewport draws, and stripped to what a map needs ([method strip]): every shadow
 ## off; its lights, cameras, environments, sounds, particles, HUDs and networking taken out, with anything in
 ## [member hide_groups] (the players, the NPCs); rigid bodies frozen; and every script dropped but those of the
 ## classes in [member keep_scripts] (a terrain that draws itself by script), so none of the level's gameplay runs a
 ## second time. The minimap's own flat, shadowless [member sun] lights it instead. It may be the very scene the game is
 ## playing, which is why it is a path: a scene cannot hold a reference to itself. [member map_transform] places it
 ## where the game places it. Left empty, the view is of the game's own world, as the Breath of the Wild HUD this came
-## from drew it, shadows, players and all. The map is not loaded in the editor.
+## from drew it, shadows, players and all. The map is not loaded in the editor. The copy lives outside the game's scene,
+## under the root window ([method get_level]), so nothing that searches the game ever finds it.
 ##
 ## North is up unless [member rotate_with_target], which turns the map so the target always faces up and walks the
 ## north marker round the ring instead.
@@ -75,6 +76,27 @@ var _level: Node = null
 ## The world a map scene is drawn in. Given to the SubViewport rather than switching its own_world_3d, which the
 ## engine does not take back cleanly on a live viewport.
 var _map_world: World3D = World3D.new()
+## Where the map's copy of the level lives: a SubViewport of its own under the root window, sharing [member _map_world]
+## but drawing nothing itself, so the copy is outside the game's scene and no search of it (find_child by name, even
+## unowned) ever lands on the map's copy of a tree instead of the real one. Its [member _eye] follows the minimap's
+## camera, for anything in the level that picks its detail from the camera of its own viewport (a terrain).
+var _holder: SubViewport = null
+var _eye: Camera3D = null
+
+
+func _exit_tree() -> void:
+	if _holder != null and is_instance_valid(_holder):
+		if _holder.is_inside_tree():
+			_holder.queue_free()
+		else:
+			_holder.free() # never attached: nothing else will
+	_holder = null
+	_level = null
+
+
+## The loaded copy of the map scene, or null.
+func get_level() -> Node:
+	return _level if _level != null and is_instance_valid(_level) else null
 
 
 func _ready() -> void:
@@ -102,12 +124,35 @@ func load_map() -> void:
 	strip(_level, hide_groups, keep_scripts)
 	if _level is Node3D:
 		(_level as Node3D).transform = map_transform
-	map_root.add_child(_level)
+	_hold().add_child(_level)
+
+
+func _hold() -> SubViewport:
+	if _holder == null or not is_instance_valid(_holder):
+		_holder = SubViewport.new()
+		_holder.name = "MinimapMap"
+		_holder.world_3d = _map_world
+		_holder.size = Vector2i(2, 2)
+		_holder.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		_eye = Camera3D.new()
+		_eye.projection = Camera3D.PROJECTION_ORTHOGONAL
+		_eye.current = true
+		_holder.add_child(_eye)
+		# The root is busy while the scene that holds this minimap is still entering it. Deferred on this node, so the
+		# call is dropped if the minimap is gone first, and _exit_tree frees the holder instead.
+		_attach_holder.call_deferred()
+	return _holder
+
+
+func _attach_holder() -> void:
+	if is_inside_tree() and _holder != null and is_instance_valid(_holder) and not _holder.is_inside_tree():
+		get_tree().root.add_child(_holder)
 
 
 ## Strips [param root] to what a map needs, before it enters a tree. Every shadow goes off. Removed: lights,
 ## cameras, environments, sounds, particles, anything 2D or on a canvas layer (a HUD), multiplayer spawners and
-## synchronizers, other viewports, and every node in [param hidden_groups]. Rigid bodies are frozen. Every script is
+## synchronizers, other viewports, and every node in [param hidden_groups]. Rigid bodies are frozen, and every node
+## leaves its groups, so no group lookup in the game finds the map's copy of something. Every script is
 ## dropped, so the level's gameplay (spawners, saves, AI, weather) never runs in the map, except those whose global
 ## class, or a class it extends, is in [param keep_classes]. Returns how many nodes it removed.
 static func strip(root: Node, hidden_groups: PackedStringArray = PackedStringArray(), keep_classes: PackedStringArray = PackedStringArray()) -> int:
@@ -125,6 +170,10 @@ static func strip(root: Node, hidden_groups: PackedStringArray = PackedStringArr
 		var script: Script = node.get_script() as Script
 		if script != null and not _kept(script, keep_classes):
 			node.set_script(null)
+		# Out of every group, so a group lookup in the game (its checkpoints, its water) never lands on the map's copy.
+		# Owners stay: a unique-name path (%GeneralSkeleton) resolves through them.
+		for group: StringName in node.get_groups():
+			node.remove_from_group(group)
 		if node is GeometryInstance3D:
 			(node as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		if node is RigidBody3D:
@@ -187,6 +236,10 @@ func _process(_delta: float) -> void:
 	# Screen rotation is clockwise; a yaw anticlockwise from above turns the arrow the other way.
 	arrow.rotation = 0.0 if rotate_with_target else -heading_yaw()
 	_place_north(yaw)
+	if _eye != null and is_instance_valid(_eye) and _eye.is_inside_tree():
+		_eye.global_transform = camera.global_transform
+		_eye.size = camera.size
+		_eye.far = camera.far
 
 
 ## Puts the north marker on the ring where north is: the top, or turned with the map.

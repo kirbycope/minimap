@@ -71,13 +71,28 @@ func test_stripping_leaves_a_shadowless_map_with_no_gameplay() -> void:
 	assert_not_null(level.get_node("Terrain").get_script(), "but a class named to keep stays: a terrain that draws itself")
 
 
+func test_the_game_never_finds_the_maps_copies() -> void:
+	var level: Node3D = _level()
+	var house: Node = level.get_node("House")
+	house.owner = level
+	house.add_to_group(&"Checkpoint", true)
+	Minimap.strip(level)
+	assert_false(house.is_in_group(&"Checkpoint"), "The copy leaves its groups, so a group lookup finds only the real one")
+	assert_eq(house.owner, level, "and keeps its owner, which unique-name paths resolve through")
+	level.free()
+
+
 func test_a_map_scene_loads_into_a_world_of_its_own_and_none_draws_the_game_world() -> void:
 	assert_eq(minimap.viewport.find_world_3d(), get_viewport().find_world_3d(), "No map scene: the game's own world")
 	assert_false(minimap.sun.visible, "lit by its own light, not the minimap's")
 	minimap.map_path = MAP_PATH
 	assert_ne(minimap.viewport.find_world_3d(), get_viewport().find_world_3d(), "A map scene is drawn in a world of its own")
 	assert_true(minimap.sun.visible, "under the minimap's flat light")
-	var level: Node = minimap.map_root.get_child(minimap.map_root.get_child_count() - 1)
+	var level: Node = minimap.get_level()
+	assert_not_null(level, "The copy is loaded")
+	assert_false(is_ancestor_of(level), "outside the game's scene, where no search of the game finds it")
+	await wait_process_frames(2)
+	assert_eq(level.get_viewport().find_world_3d(), minimap.viewport.find_world_3d(), "in the world the minimap draws")
 	assert_eq(level.find_children("*", "DirectionalLight3D", true, false).size(), 0, "without the level's own sun")
 	for mesh: Node in level.find_children("*", "GeometryInstance3D", true, false):
 		assert_eq((mesh as GeometryInstance3D).cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "%s casts no shadow" % mesh.name)
@@ -88,7 +103,7 @@ func test_a_map_scene_loads_into_a_world_of_its_own_and_none_draws_the_game_worl
 func test_the_map_scene_goes_where_the_game_puts_it() -> void:
 	minimap.map_transform = Transform3D(Basis(), Vector3(-176.0, -23.7, -280.0))
 	minimap.map_path = MAP_PATH
-	var level: Node3D = minimap.map_root.get_child(minimap.map_root.get_child_count() - 1)
+	var level: Node3D = minimap.get_level() as Node3D
 	assert_eq(level.position, Vector3(-176.0, -23.7, -280.0))
 
 
