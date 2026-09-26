@@ -1,3 +1,5 @@
+![Preview](addons/minimap/assets/minimap.png)
+
 # Minimap for Godot 4.8+
 
 A round HUD minimap, the Zelda and Mario Kart way: a live top-down view of the game's world drawn without light or
