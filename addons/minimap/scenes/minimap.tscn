@@ -52,7 +52,6 @@ theme_override_styles/panel = SubResource("Round")
 
 [node name="SubViewport" type="SubViewport" parent="."]
 editor_description = "Where the map is rendered, square and as large as the minimap. Its own world while a map scene is set, the game's otherwise."
-transparent_bg = true
 size = Vector2i(164, 164)
 render_target_update_mode = 4
 
